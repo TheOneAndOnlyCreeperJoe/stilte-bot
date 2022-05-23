@@ -7,7 +7,7 @@ const getFiles = (path, ending) => {
 module.exports = (bot, reload) => {
     const { client } = bot 
 
-    let slashcommands = getFiles("../slashcommands/", ".js")
+    let slashcommands = getFiles("./slashcommands/", ".js")
 
     if (slashcommands.length === 0)
         console.log("No slash commands loaded")
