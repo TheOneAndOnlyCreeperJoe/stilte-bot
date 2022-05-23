@@ -159,12 +159,15 @@ client.on("messageCreate", async (message) => {
                     let gagType = gaglist.get(key, "gagtype") //Find the gagtype associated with the user.
                     // So at this point we send back the webhook message, that mimmicks the username and avatar of the person, with funny gagged noises.
                     // Gagspeak gag-type; replace letters and numbers with characters from the ballGagTable
-                    if (gagType <= 2) {
+                    if (gagType < 100) {
                         let noiseTable = [] // The table containing the gag, see gaglists.js
                         switch (gagType) {
                             case 0: noiseTable = gagLists.ballGagTable; break;
                             case 1: noiseTable = gagLists.muzzleTable; break;
                             case 2: noiseTable = gagLists.ringGagTable; break;
+                            case 3: noiseTable = gagLists.cockGagTable; break;
+                            case 4: noiseTable = gagLists.bitGagTable; break;
+                            
                         }
                         const gagNoise = ["m", "n", "ph", "mm", "h"]; // The noises used if its an irregular character, aka unicode/wèìrd chàràctèrs
                         for (let i = 0; i < emoteFilteredMessage.length;) {
@@ -210,13 +213,13 @@ client.on("messageCreate", async (message) => {
                         if (emoteFilteredMessage.length === 0 || !emoteFilteredMessage.replace(/\s/g, '').length) gagSpeech = "..." // The bot will have an aneurism if we try to send an empty message. This happens if their message was just external emojis, or an attachement.
                         else gagSpeech = gagSpeech[0].toUpperCase() + gagSpeech.substring(1) // Properly capitalize the first letter because we love being civilized.
                     }
-                    else if (gagType == 3) { // We don't need to do anything fancy with the hood, since its just pure enforced silence.
+                    else if (gagType == 100) { // We don't need to do anything fancy with the hood, since its just pure enforced silence.
                         // If RP mode is on, we check if the message begins and ends with either _ and *, and not a mix of either.
                         if (emoteFilteredMessage.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '_' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '_') : false) gagSpeech = emoteFilteredMessage
                         else if (emoteFilteredMessage.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '*' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '*') : false) gagSpeech = emoteFilteredMessage
                         else gagSpeech = "..."
                     }
-                    else if (gagType == 4) { // the dreaded emoji gag.
+                    else if (gagType == 101) { // the dreaded emoji gag.
                         const emoteRegex = /(<a?:.+?:\d+>|\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/g // This is the regex for all emojis.
                         // If RP mode is on, we check if the message begins and ends with either _ and *, and not a mix of either.
                         if (message.content.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '_' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '_') : false) gagSpeech = message.content

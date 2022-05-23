@@ -48,6 +48,7 @@ const ballGagTable = {
     ";": ";",
     " ": " "
 }
+
 const muzzleTable = {
     "a": "r",
     "b": "h",
@@ -96,6 +97,7 @@ const muzzleTable = {
     ";": ";",
     " ": " "
 }
+
 const ringGagTable = {
     "a": "a",
     "b": "h",
@@ -143,6 +145,106 @@ const ringGagTable = {
     " ": " "
 }
 
+const cockGagTable = {
+    "a": "m",
+    "b": "mh",
+    "c": "mr",
+    "d": "uh",
+    "e": "m",
+    "f": "",
+    "g": "gh",
+    "h": "hm",
+    "i": "m",
+    "j": "hu",
+    "k": "mn",
+    "l": "ml",
+    "m": "m",
+    "n": "mn",
+    "o": "umh",
+    "p": "mh",
+    "q": "hm",
+    "r": "hr",
+    "s": "",
+    "t": "mh",
+    "u": "uh",
+    "v": "vf",
+    "w": "mhm",
+    "x": "",
+    "y": "mu",
+    "z": "m",
+    // NUMBERS
+    "0": "mmhrumh",
+    "1": "umhmnm",
+    "2": "mmhmhmumh",
+    "3": "mhhmhrmm",
+    "4": "umhuhhr",
+    "5": "mvfm",
+    "6": "m",
+    "7": "mvfmmn",
+    "8": "mmghhmmh",
+    "9": "mnmmnm",
+    // LIMITED PUNCTUATION
+    "\"": "\"",
+    "!": "!",
+    ".": ".",
+    "?": "?",
+    ",": ",",
+    ":": ":",
+    ";": ";",
+    " ": " "
+}
+
+const bitGagTable = {
+    "a": "aw",
+    "b": "uff",
+    "c": "ur",
+    "d": "al",
+    "e": "uh",
+    "f": "fpu",
+    "g": "eh",
+    "h": "uh",
+    "i": "ih",
+    "j": "eh",
+    "k": "hu",
+    "l": "ue",
+    "m": "vh",
+    "n": "vu",
+    "o": "oh",
+    "p": "vf",
+    "q": "ve",
+    "r": "ur",
+    "s": "fu",
+    "t": "pht",
+    "u": "uh",
+    "v": "vz",
+    "w": "vzz",
+    "x": "pff",
+    "y": "eu",
+    "z": "zu",
+    // NUMBERS
+    "0": "zuuhuroh",
+    "1": "ohvuuh",
+    "2": "phtvzzoh",
+    "3": "phtuhuruhuh",
+    "4": "fpuohuhur",
+    "5": "fpuihvzuh",
+    "6": "fuihpff",
+    "7": "fuuhvzuhvu",
+    "8": "uhihehuhpht",
+    "9": "vuihvuuh",
+    // LIMITED PUNCTUATION
+    "\"": "\"",
+    "!": "!",
+    ".": ".",
+    "?": "?",
+    ",": ",",
+    ":": ":",
+    ";": ";",
+    " ": " "
+}
+
 exports.ballGagTable = ballGagTable
 exports.muzzleTable = muzzleTable
 exports.ringGagTable = ringGagTable
+exports.cockGagTable = cockGagTable
+exports.bitGagTable = bitGagTable

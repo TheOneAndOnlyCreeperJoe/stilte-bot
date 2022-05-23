@@ -6,8 +6,10 @@ const types = [
     { name: "Ball-gag", value: 0, plural: "ged" }, // Default
     { name: "Muzzle", value: 1, plural: "d" }, // 
     { name: "Ring-gag", value: 2, plural: "ged" }, // 
-    { name: "Sound-Proof Hood", value: 3, plural: "ed" }, // Just straight up deletes all messages.
-    { name: "Synth Gag", value: 4, plural: "ged" }, // Also known as the emoji gag.
+    { name: "Cock-gag", value: 3, plural: "ged"},
+    { name: "Bit-gag", value: 4, plural: "ged"},
+    { name: "Sound-Proof Hood", value: 100, plural: "ed" }, // Just straight up deletes all messages.
+    { name: "Synth Gag", value: 101, plural: "ged" }, // Also known as the emoji gag.
 ]
 
 const run = async (client, interaction) => {
