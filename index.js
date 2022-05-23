@@ -19,15 +19,6 @@ let settings = new Enmap({
     fetchAll: false,
     autoFetch: true,
     cloneLevel: 'deep',
-    autoEnsure: {
-        blacklistedChannels: [],	//channels in which the bot will not replace messages.
-        permsUse: "MODERATE_MEMBERS",	//the default permission to use existing gag commands, but not create or alter them.
-        permsManage: "MANAGE_GUILD", // the default permission for debug commands a la /poke and managing who has access to what.
-        toggleSafeword: 1, // checks if safeword is enabled, which is a forced ungag.
-        toggleSelfUse: 0, // checks if users can gag themselves.
-        toggleRP: 0, // checks if the bot should retain anything between asterisks, as is common with RP.
-        toggleHierarchy: 0, // checks if role hierarchy is enforced, aka can't gag equal or higher role tier people, or undo their gags.
-    }
 });
 
 let gaglist = new Enmap({
