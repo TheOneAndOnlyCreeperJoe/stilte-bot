@@ -15,9 +15,8 @@ const types = [
     { name: "Ring-gag", value: 2, plural: "ged" }, // 
     { name: "Cock-gag", value: 3, plural: "ged" },
     { name: "Bit-gag", value: 4, plural: "ged"},
-    // Special Gags
-    { name: "Sound-Proof Hood", value: 100, plural: "ed" }, // Just straight up deletes all messages.
-    { name: "Synth Gag", value: 101, plural: "ged" }, // Also known as the emoji gag.
+    { name: "Sound-Proof Hood", value: 5, plural: "ed" }, // Just straight up deletes all messages.
+    { name: "Synth Gag", value: 6, plural: "ged" }, // Also known as the emoji gag.
 ]
 
 const durations = [
@@ -79,6 +78,7 @@ const run = async (client, interaction) => {
             gaglist.set(key, expiresOn, "expirationdate");
             gaglist.set(key, date, "applicationdate");
             gaglist.set(key, gagType, "gagtype");
+            
             if (interaction.member.id !== member.id && hierarchy === 1) gaglist.set(key, interaction.member.roles.highest.rawPosition, "applierRolePower"); //Used to keep track of the power of the gag applier if Hierarchy is on.
             else gaglist.set(key, -1, "applierRolePower"); // In case if role hierarchy is off, or if they self-gag, they can still ungag themselves.
             
