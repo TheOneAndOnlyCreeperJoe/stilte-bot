@@ -44,7 +44,13 @@ client.on("interactionCreate", (interaction) => {
     if (!interaction.isCommand()) return
     if (DEVMODE == 1 && interaction.guild.id != DEVSERVER) return interaction.reply("I am currently in maintenance mode, please try again later!")
 
+    const slashcmd = client.slashcommands.get(interaction.commandName) // Get all the loaded slash commands.
+
+    // We allow for limited use of commands outside of servers. Thse are marked with serverOnly: false.
+    if (!interaction.inGuild() && slashcmd.serverOnly !== false) return interaction.reply("I do not allow for this command outside of servers!")
+
     //so before we run any command in Stilte we make sure that the settings are actually there.
+    if (interaction.inGuild()){
     settings.ensure(`${interaction.guild.id}`, {
         blacklistedChannels: [],	//channels in which the bot will not replace messages.
         permsUse: "MODERATE_MEMBERS",	//the default permission to use existing gag commands, but not create or alter them.
@@ -54,12 +60,8 @@ client.on("interactionCreate", (interaction) => {
         toggleRP: 0, // checks if the bot should retain anything between asterisks, as is common with RP.
         toggleHierarchy: 0, // checks if role hierarchy is enforced, aka can't gag equal or higher role tier people, or undo their gags.
     })
-
-    const slashcmd = client.slashcommands.get(interaction.commandName) // Get all the loaded slash commands.
-
-    // We allow for limited use of commands outside of servers. Thse are marked with serverOnly: false.
-    if (!interaction.inGuild() && slashcmd.serverOnly !== false) return interaction.reply("I do not allow for this command outside of servers!")
-
+    }
+    
     let requiredperms = "ADMINISTRATOR" // default to admin cause why not
     let key
     if (interaction.inGuild()) key = `${interaction.guild.id}`
@@ -103,7 +105,7 @@ client.login(process.env.TOKEN)
 // Whenever a server is joined, create auto-ensured settings. 
 client.on("guildCreate", guild => {
     console.log(`Guild joined: ${guild.name} - ${guild.id}`)
-    settings.ensure(`${interaction.guild.id}`, {
+    settings.ensure(`${guild.id}`, {
         blacklistedChannels: [],	//channels in which the bot will not replace messages.
         permsUse: "MODERATE_MEMBERS",	//the default permission to use existing gag commands, but not create or alter them.
         permsManage: "MANAGE_GUILD", // the default permission for debug commands a la /poke and managing who has access to what.
@@ -167,7 +169,7 @@ client.on("messageCreate", async (message) => {
                             case 2: noiseTable = gagLists.ringGagTable; break;
                             case 3: noiseTable = gagLists.cockGagTable; break;
                             case 4: noiseTable = gagLists.bitGagTable; break;
-                            
+
                         }
                         const gagNoise = ["m", "n", "ph", "mm", "h"]; // The noises used if its an irregular character, aka unicode/wèìrd chàràctèrs
                         for (let i = 0; i < emoteFilteredMessage.length;) {
