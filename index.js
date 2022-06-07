@@ -50,18 +50,18 @@ client.on("interactionCreate", (interaction) => {
     if (!interaction.inGuild() && slashcmd.serverOnly !== false) return interaction.reply("I do not allow for this command outside of servers!")
 
     //so before we run any command in Stilte we make sure that the settings are actually there.
-    if (interaction.inGuild()){
-    settings.ensure(`${interaction.guild.id}`, {
-        blacklistedChannels: [],	//channels in which the bot will not replace messages.
-        permsUse: "MODERATE_MEMBERS",	//the default permission to use existing gag commands, but not create or alter them.
-        permsManage: "MANAGE_GUILD", // the default permission for debug commands a la /poke and managing who has access to what.
-        toggleSafeword: 1, // checks if safeword is enabled, which is a forced ungag.
-        toggleSelfUse: 0, // checks if users can gag themselves.
-        toggleRP: 0, // checks if the bot should retain anything between asterisks, as is common with RP.
-        toggleHierarchy: 0, // checks if role hierarchy is enforced, aka can't gag equal or higher role tier people, or undo their gags.
-    })
+    if (interaction.inGuild()) {
+        settings.ensure(`${interaction.guild.id}`, {
+            blacklistedChannels: [],	//channels in which the bot will not replace messages.
+            permsUse: "MODERATE_MEMBERS",	//the default permission to use existing gag commands, but not create or alter them.
+            permsManage: "MANAGE_GUILD", // the default permission for debug commands a la /poke and managing who has access to what.
+            toggleSafeword: 1, // checks if safeword is enabled, which is a forced ungag.
+            toggleSelfUse: 0, // checks if users can gag themselves.
+            toggleRP: 0, // checks if the bot should retain anything between asterisks, as is common with RP.
+            toggleHierarchy: 0, // checks if role hierarchy is enforced, aka can't gag equal or higher role tier people, or undo their gags.
+        })
     }
-    
+
     let requiredperms = "ADMINISTRATOR" // default to admin cause why not
     let key
     if (interaction.inGuild()) key = `${interaction.guild.id}`
@@ -162,7 +162,7 @@ client.on("messageCreate", async (message) => {
                     // So at this point we send back the webhook message, that mimmicks the username and avatar of the person, with funny gagged noises.
                     // Gagspeak gag-type; replace letters and numbers with characters from the ballGagTable
                     if (gagType <= 4) {
-                        let noiseTable = [] // The table containing the gag, see gaglists.js
+                        var noiseTable = []; // The table containing the gag, see gaglists.js
                         switch (gagType) {
                             case 0: noiseTable = gagLists.ballGagTable; break;
                             case 1: noiseTable = gagLists.muzzleTable; break;
@@ -182,7 +182,34 @@ client.on("messageCreate", async (message) => {
                             if (RPmode === 1 ? (asteriskFlag === true || underscoreFlag === true || emoteFilteredMessage[i] === '*' || emoteFilteredMessage[i] === '_') : false) gagSpeech += emoteFilteredMessage[i]
                             else {
                                 //No RPmode or the message is not between * and _, proceed to gag like normal.
-                                let result = noiseTable[emoteFilteredMessage[i].toLowerCase()]
+                                let inputCharacter = emoteFilteredMessage[i].toLowerCase()
+                                let result
+                                let canHaveOpeners = false
+                                let canHaveClosers = false
+                                let openerNeeded = false
+                                let closerNeeded = false
+                                //Check if we can and/or need to put an opener or closer in front of the character.
+                                if (`${inputCharacter}` in noiseTable) {
+                                    if ('opener' in noiseTable[inputCharacter]) canHaveOpeners = true
+                                    if (i !== 0 ? (emoteFilteredMessage[i - 1].toLowerCase() != inputCharacter) : true) openerNeeded = true
+                                    //Check if we can and/or need to put a closer after the character.
+                                    if ('closer' in noiseTable[inputCharacter]) canHaveClosers = true
+                                    if (i !== emoteFilteredMessage.length - 1 ? (emoteFilteredMessage[i + 1].toLowerCase() != inputCharacter) : true) closerNeeded = true
+                                    // Bit messy but argueably the best way to use two flags without concat?
+
+                                    if (canHaveOpeners && canHaveClosers ? (openerNeeded && closerNeeded) : false) {
+                                        result = noiseTable[inputCharacter].opener + noiseTable[inputCharacter].standard + noiseTable[inputCharacter].closer
+                                    }
+                                    else if (canHaveOpeners && openerNeeded) {
+                                        result = noiseTable[inputCharacter].opener + noiseTable[inputCharacter].standard
+                                    }
+                                    else if (canHaveClosers && closerNeeded) {
+                                        result = noiseTable[inputCharacter].standard + noiseTable[inputCharacter].closer
+                                    }
+                                    else {
+                                        result = noiseTable[inputCharacter].standard
+                                    }
+                                }
                                 if (result === undefined) {
                                     let randomGag = Math.floor(Math.random() * gagNoise.length);
                                     result = gagNoise[randomGag] // if we get undefined we just grab a random letter
@@ -202,72 +229,100 @@ client.on("messageCreate", async (message) => {
                             const toBeReplacedText = gagSpeech.substring(lastOccurance + 1) // we do +1 so that we don't include the rogue smyobl.
                             gagSpeech = gagSpeech.slice(0, lastOccurance) // Cut away everything after the rogue symbol, because we're running through it again.
                             for (let i = 0; i < toBeReplacedText.length;) { // We don't need to check for RPmode since we're doing this because of a RPmode failure anyways.
-                                let result = noiseTable[toBeReplacedText[i].toLowerCase()]
-                                if (result === undefined) { // We can still get undefineds from this due to _ and * being undefined.
+                                //No RPmode or the message is not between * and _, proceed to gag like normal.
+                                let inputCharacter = emoteFilteredMessage[i].toLowerCase()
+                                let result
+                                let canHaveOpeners = false
+                                let canHaveClosers = false
+                                let openerNeeded = false
+                                let closerNeeded = false
+                                //Check if we can and/or need to put an opener or closer in front of the character.
+                                if (`${inputCharacter}` in noiseTable) {
+                                    if ('opener' in noiseTable[inputCharacter]) canHaveOpeners = true
+                                    if (i !== 0 ? (emoteFilteredMessage[i - 1].toLowerCase() != inputCharacter) : true) openerNeeded = true
+                                    //Check if we can and/or need to put a closer after the character.
+                                    if ('closer' in noiseTable[inputCharacter]) canHaveClosers = true
+                                    if (i !== emoteFilteredMessage.length - 1 ? (emoteFilteredMessage[i + 1].toLowerCase() != inputCharacter) : true) closerNeeded = true
+                                    // Bit messy but argueably the best way to use two flags without concat?
+
+                                    if (canHaveOpeners && canHaveClosers ? (openerNeeded && closerNeeded) : false) {
+                                        result = noiseTable[inputCharacter].opener + noiseTable[inputCharacter].standard + noiseTable[inputCharacter].closer
+                                    }
+                                    else if (canHaveOpeners && openerNeeded) {
+                                        result = noiseTable[inputCharacter].opener + noiseTable[inputCharacter].standard
+                                    }
+                                    else if (canHaveClosers && closerNeeded) {
+                                        result = noiseTable[inputCharacter].standard + noiseTable[inputCharacter].closer
+                                    }
+                                    else {
+                                        result = noiseTable[inputCharacter].standard
+                                    }
+                                }
+                                if (result === undefined) {
                                     let randomGag = Math.floor(Math.random() * gagNoise.length);
                                     result = gagNoise[randomGag] // if we get undefined we just grab a random letter
                                 }
                                 gagSpeech += result
                                 i++
-                            }
                         }
-                        // Final steps
-                        if (emoteFilteredMessage.length === 0 || !emoteFilteredMessage.replace(/\s/g, '').length) gagSpeech = "..." // The bot will have an aneurism if we try to send an empty message. This happens if their message was just external emojis, or an attachement.
-                        else gagSpeech = gagSpeech[0].toUpperCase() + gagSpeech.substring(1) // Properly capitalize the first letter because we love being civilized.
                     }
+                    // Final steps
+                    if (emoteFilteredMessage.length === 0 || !emoteFilteredMessage.replace(/\s/g, '').length) gagSpeech = "..." // The bot will have an aneurism if we try to send an empty message. This happens if their message was just external emojis, or an attachement.
+                    else gagSpeech = gagSpeech[0].toUpperCase() + gagSpeech.substring(1) // Properly capitalize the first letter because we love being civilized.
+                }
                     else if (gagType == 5) { // We don't need to do anything fancy with the hood, since its just pure enforced silence.
-                        // If RP mode is on, we check if the message begins and ends with either _ and *, and not a mix of either.
-                        if (emoteFilteredMessage.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '_' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '_') : false) gagSpeech = emoteFilteredMessage
-                        else if (emoteFilteredMessage.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '*' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '*') : false) gagSpeech = emoteFilteredMessage
-                        else gagSpeech = "..."
+                    // If RP mode is on, we check if the message begins and ends with either _ and *, and not a mix of either.
+                    if (emoteFilteredMessage.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '_' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '_') : false) gagSpeech = emoteFilteredMessage
+                    else if (emoteFilteredMessage.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '*' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '*') : false) gagSpeech = emoteFilteredMessage
+                    else gagSpeech = "..."
+                }
+                else if (gagType == 6) { // the dreaded emoji gag.
+                    const emoteRegex = /(<a?:.+?:\d+>|\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/g // This is the regex for all emojis.
+                    // If RP mode is on, we check if the message begins and ends with either _ and *, and not a mix of either.
+                    if (message.content.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '_' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '_') : false) gagSpeech = message.content
+                    else if (message.content.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '*' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '*') : false) gagSpeech = message.content
+                    else if (!message.content.match(emoteRegex)) { // Prevents crashing.
+                        gagSpeech = ":zipper_mouth:"
+                        message.author.send("You did not send any emojis/emotes with your text. Synth gag only allows for communication with emotes/emojis.")
                     }
-                    else if (gagType == 6) { // the dreaded emoji gag.
-                        const emoteRegex = /(<a?:.+?:\d+>|\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/g // This is the regex for all emojis.
-                        // If RP mode is on, we check if the message begins and ends with either _ and *, and not a mix of either.
-                        if (message.content.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '_' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '_') : false) gagSpeech = message.content
-                        else if (message.content.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '*' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '*') : false) gagSpeech = message.content
-                        else if (!message.content.match(emoteRegex)) { // Prevents crashing.
-                            gagSpeech = ":zipper_mouth:"
-                            message.author.send("You did not send any emojis/emotes with your text. Synth gag only allows for communication with emotes/emojis.")
-                        }
-                        else {
-                            // Get all unicode and discord emotes and make a new message string based on them.
-                            for (const match of message.content.match(emoteRegex)) {
-                                const emoji = match;
-                                gagSpeech += emoji
-                            }
+                    else {
+                        // Get all unicode and discord emotes and make a new message string based on them.
+                        for (const match of message.content.match(emoteRegex)) {
+                            const emoji = match;
+                            gagSpeech += emoji
                         }
                     }
-                    //WEBHOOK HANDLING
-                    //Check if the webhook's already there
-                    const channel = client.channels.cache.get(message.channel.id);
-                    try {
-                        const webhooks = await channel.fetchWebhooks();
-                        let webhook = webhooks.find(wh => wh.name === `${client.user.username}`); // For the sake of making sure that the dev-bot can use his own webhooks.
-                        if (!webhook) { // If Stilte is there.
-                            message.channel.createWebhook(`${client.user.username}`).then(message.delete()).then(webhook => {
-                                webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL() })
-                                //INCASE I WANT TO RESTORE EMBEDS, UNCOMMENT.
-                                //if (message.attachments.size > 0) webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL(), files: [message.attachments.first()] })
-                                //else webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL() })
-
-                            })
-                        }
-                        else { // we found stilte pog
-                            message.delete()
+                }
+                //WEBHOOK HANDLING
+                //Check if the webhook's already there
+                const channel = client.channels.cache.get(message.channel.id);
+                try {
+                    const webhooks = await channel.fetchWebhooks();
+                    let webhook = webhooks.find(wh => wh.name === `${client.user.username}`); // For the sake of making sure that the dev-bot can use his own webhooks.
+                    if (!webhook) { // If Stilte is there.
+                        message.channel.createWebhook(`${client.user.username}`).then(message.delete()).then(webhook => {
                             webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL() })
                             //INCASE I WANT TO RESTORE EMBEDS, UNCOMMENT.
-                            //if (message.attachments.size > 0) webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL(), files: [message.attachments.first(), message.attachments.second(), message.attachments.third()] })
+                            //if (message.attachments.size > 0) webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL(), files: [message.attachments.first()] })
                             //else webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL() })
-                        }
-                    } catch (error) {
-                        console.error(`Error trying to send a message in ${message.guild.name} - ${message.guild.id}`, error);
+
+                        })
+                    }
+                    else { // we found stilte pog
+                        message.delete()
+                        webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL() })
+                        //INCASE I WANT TO RESTORE EMBEDS, UNCOMMENT.
+                        //if (message.attachments.size > 0) webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL(), files: [message.attachments.first(), message.attachments.second(), message.attachments.third()] })
+                        //else webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL() })
                     }
                 } catch (error) {
                     console.error(`Error trying to send a message in ${message.guild.name} - ${message.guild.id}`, error);
                 }
+            } catch (error) {
+                console.error(`Error trying to send a message in ${message.guild.name} - ${message.guild.id}`, error);
             }
         }
     }
+}
 })
 
