@@ -1,5 +1,6 @@
 const { channel } = require("diagnostics_channel")
 const Discord = require("discord.js")
+const { MessageEmbed } = require('discord.js');
 const gagLists = require("./gaglists")
 const Enmap = require('enmap');
 
@@ -40,47 +41,63 @@ client.loadSlashCommands(bot, false)
 
 // Whenever someone calls a slash command.
 client.on("interactionCreate", (interaction) => {
-    //If its not actually a command or we're in DEVMODE: don't
-    if (!interaction.isCommand()) return
-    if (DEVMODE == 1 && interaction.guild.id != DEVSERVER) return interaction.reply("I am currently in maintenance mode, please try again later!")
+    const embed = new MessageEmbed()
+    try {
+        //If its not actually a command or we're in DEVMODE: don't
+        if (!interaction.isCommand()) return
+        if (DEVMODE == 1 && interaction.guild.id != DEVSERVER) {
+            embed.setColor(0xe68500)
+            embed.addField('Error!', 'I am currently in maintenance mode, please try again later!', true);
+            return interaction.reply({ embeds: [embed] })
+        }
 
-    const slashcmd = client.slashcommands.get(interaction.commandName) // Get all the loaded slash commands.
+        const slashcmd = client.slashcommands.get(interaction.commandName) // Get all the loaded slash commands.
 
-    // We allow for limited use of commands outside of servers. Thse are marked with serverOnly: false.
-    if (!interaction.inGuild() && slashcmd.serverOnly !== false) return interaction.reply("I do not allow for this command outside of servers!")
+        // We allow for limited use of commands outside of servers. Thse are marked with serverOnly: false.
+        if (!interaction.inGuild() && slashcmd.serverOnly !== false) return interaction.reply("I do not allow for this command outside of servers!")
 
-    //so before we run any command in Stilte we make sure that the settings are actually there.
-    if (interaction.inGuild()) {
-        settings.ensure(`${interaction.guild.id}`, {
-            blacklistedChannels: [],	//channels in which the bot will not replace messages.
-            permsUse: "MODERATE_MEMBERS",	//the default permission to use existing gag commands, but not create or alter them.
-            permsManage: "MANAGE_GUILD", // the default permission for debug commands a la /poke and managing who has access to what.
-            toggleSafeword: 1, // checks if safeword is enabled, which is a forced ungag.
-            toggleSelfUse: 0, // checks if users can gag themselves.
-            toggleRP: 0, // checks if the bot should retain anything between asterisks, as is common with RP.
-            toggleHierarchy: 0, // checks if role hierarchy is enforced, aka can't gag equal or higher role tier people, or undo their gags.
-        })
+        //so before we run any command in Stilte we make sure that the settings are actually there.
+        if (interaction.inGuild()) {
+            settings.ensure(`${interaction.guild.id}`, {
+                blacklistedChannels: [],	//channels in which the bot will not replace messages.
+                permsUse: "MODERATE_MEMBERS",	//the default permission to use existing gag commands, but not create or alter them.
+                permsManage: "MANAGE_GUILD", // the default permission for debug commands a la /poke and managing who has access to what.
+                toggleSafeword: 1, // checks if safeword is enabled, which is a forced ungag.
+                toggleSelfUse: 0, // checks if users can gag themselves.
+                toggleRP: 0, // checks if the bot should retain anything between asterisks, as is common with RP.
+                toggleHierarchy: 0, // checks if role hierarchy is enforced, aka can't gag equal or higher role tier people, or undo their gags.
+            })
+        }
+
+        let requiredperms = "ADMINISTRATOR" // default to admin cause why not
+        let key
+        if (interaction.inGuild()) key = `${interaction.guild.id}`
+
+        if (!slashcmd) return interaction.reply("Invalid slash command. I am honestly quite impressed you managed to trigger this error, please tell the developer this so you can earn a cookie.") // How does this even happen?
+
+        //so because we can't get the ID of the guild inside slashcommands (yes we can Past Joe you shit-tier programmer), we actually handle perms in here.
+        //That said, this keeps perms nicely centralized.
+        switch (slashcmd.perm) {
+            case "useperms": requiredperms = settings.get(key, "permsUse"); break;
+            case "manageperms": requiredperms = settings.get(key, "permsManage"); break;
+        }
+
+        //Naughty naughty, you're not allowed to do that~
+        if (slashcmd.perm) {
+            if (!interaction.member.permissions.has(requiredperms)) {
+                embed.setColor(0xe6b800)
+                embed.addField('No Permission!', 'You do not have the permissions to run this command!', true);
+                return interaction.reply({ embeds: [embed], ephemeral: true })
+            }
+        }
+        slashcmd.run(client, interaction) // RUUUUUUN
     }
-
-    let requiredperms = "ADMINISTRATOR" // default to admin cause why not
-    let key
-    if (interaction.inGuild()) key = `${interaction.guild.id}`
-
-    if (!slashcmd) return interaction.reply("Invalid slash command") // How does this even happen?
-
-    //so because we can't get the ID of the guild inside slashcommands (yes we can Past Joe you shit-tier programmer), we actually handle perms in here.
-    //That said, this keeps perms nicely centralized.
-    switch (slashcmd.perm) {
-        case "useperms": requiredperms = settings.get(key, "permsUse"); break;
-        case "manageperms": requiredperms = settings.get(key, "permsManage"); break;
+    catch {
+        console.error('Error trying to run command: ', error);
+        embed.setColor(0xe61b00)
+        embed.addField('Error!', 'Failed to run command! Please yell at the developer, as this is a serious issue. Error: ' + error, true);
+        return interaction.reply({ embeds: [embed] })
     }
-
-    //Naughty naughty, you're not allowed to do that~
-    if (slashcmd.perm) {
-        if (!interaction.member.permissions.has(requiredperms))
-            return interaction.reply("You do not have permission for this command")
-    }
-    slashcmd.run(client, interaction) // RUUUUUUN
 
     //so before and after every command we run from Stilte we actually rebuild all the relevant enmaps. This way, they'll always be up to date without needing to refresh them every message.
     gaglist = new Enmap({
@@ -244,19 +261,11 @@ client.on("messageCreate", async (message) => {
                                     if ('closer' in noiseTable[inputCharacter]) canHaveClosers = true
                                     if (i !== emoteFilteredMessage.length - 1 ? (emoteFilteredMessage[i + 1].toLowerCase() != inputCharacter) : true) closerNeeded = true
                                     // Bit messy but argueably the best way to use two flags without concat?
+                                    if (canHaveOpeners && canHaveClosers ? (openerNeeded && closerNeeded) : false) result = noiseTable[inputCharacter].opener + noiseTable[inputCharacter].standard + noiseTable[inputCharacter].closer
+                                    else if (canHaveOpeners && openerNeeded) result = noiseTable[inputCharacter].opener + noiseTable[inputCharacter].standard
+                                    else if (canHaveClosers && closerNeeded) result = noiseTable[inputCharacter].standard + noiseTable[inputCharacter].closer
+                                    else result = noiseTable[inputCharacter].standard
 
-                                    if (canHaveOpeners && canHaveClosers ? (openerNeeded && closerNeeded) : false) {
-                                        result = noiseTable[inputCharacter].opener + noiseTable[inputCharacter].standard + noiseTable[inputCharacter].closer
-                                    }
-                                    else if (canHaveOpeners && openerNeeded) {
-                                        result = noiseTable[inputCharacter].opener + noiseTable[inputCharacter].standard
-                                    }
-                                    else if (canHaveClosers && closerNeeded) {
-                                        result = noiseTable[inputCharacter].standard + noiseTable[inputCharacter].closer
-                                    }
-                                    else {
-                                        result = noiseTable[inputCharacter].standard
-                                    }
                                 }
                                 if (result === undefined) {
                                     let randomGag = Math.floor(Math.random() * gagNoise.length);
@@ -264,65 +273,65 @@ client.on("messageCreate", async (message) => {
                                 }
                                 gagSpeech += result
                                 i++
+                            }
                         }
+                        // Final steps
+                        if (emoteFilteredMessage.length === 0 || !emoteFilteredMessage.replace(/\s/g, '').length) gagSpeech = "..." // The bot will have an aneurism if we try to send an empty message. This happens if their message was just external emojis, or an attachement.
+                        else gagSpeech = gagSpeech[0].toUpperCase() + gagSpeech.substring(1) // Properly capitalize the first letter because we love being civilized.
                     }
-                    // Final steps
-                    if (emoteFilteredMessage.length === 0 || !emoteFilteredMessage.replace(/\s/g, '').length) gagSpeech = "..." // The bot will have an aneurism if we try to send an empty message. This happens if their message was just external emojis, or an attachement.
-                    else gagSpeech = gagSpeech[0].toUpperCase() + gagSpeech.substring(1) // Properly capitalize the first letter because we love being civilized.
-                }
                     else if (gagType == 5) { // We don't need to do anything fancy with the hood, since its just pure enforced silence.
-                    // If RP mode is on, we check if the message begins and ends with either _ and *, and not a mix of either.
-                    if (emoteFilteredMessage.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '_' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '_') : false) gagSpeech = emoteFilteredMessage
-                    else if (emoteFilteredMessage.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '*' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '*') : false) gagSpeech = emoteFilteredMessage
-                    else gagSpeech = "..."
-                }
-                else if (gagType == 6) { // the dreaded emoji gag.
-                    const emoteRegex = /(<a?:.+?:\d+>|\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/g // This is the regex for all emojis.
-                    // If RP mode is on, we check if the message begins and ends with either _ and *, and not a mix of either.
-                    if (message.content.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '_' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '_') : false) gagSpeech = message.content
-                    else if (message.content.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '*' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '*') : false) gagSpeech = message.content
-                    else if (!message.content.match(emoteRegex)) { // Prevents crashing.
-                        gagSpeech = ":zipper_mouth:"
-                        message.author.send("You did not send any emojis/emotes with your text. Synth gag only allows for communication with emotes/emojis.")
+                        // If RP mode is on, we check if the message begins and ends with either _ and *, and not a mix of either.
+                        if (emoteFilteredMessage.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '_' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '_') : false) gagSpeech = emoteFilteredMessage
+                        else if (emoteFilteredMessage.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '*' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '*') : false) gagSpeech = emoteFilteredMessage
+                        else gagSpeech = "..."
                     }
-                    else {
-                        // Get all unicode and discord emotes and make a new message string based on them.
-                        for (const match of message.content.match(emoteRegex)) {
-                            const emoji = match;
-                            gagSpeech += emoji
+                    else if (gagType == 6) { // the dreaded emoji gag.
+                        const emoteRegex = /(<a?:.+?:\d+>|\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/g // This is the regex for all emojis.
+                        // If RP mode is on, we check if the message begins and ends with either _ and *, and not a mix of either.
+                        if (message.content.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '_' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '_') : false) gagSpeech = message.content
+                        else if (message.content.length !== 0 && RPmode === 1 ? (emoteFilteredMessage[0] === '*' && emoteFilteredMessage[emoteFilteredMessage.length - 1] === '*') : false) gagSpeech = message.content
+                        else if (!message.content.match(emoteRegex)) { // Prevents crashing.
+                            gagSpeech = ":zipper_mouth:"
+                            message.author.send("You did not send any emojis/emotes with your text. Synth gag only allows for communication with emotes/emojis.")
+                        }
+                        else {
+                            // Get all unicode and discord emotes and make a new message string based on them.
+                            for (const match of message.content.match(emoteRegex)) {
+                                const emoji = match;
+                                gagSpeech += emoji
+                            }
                         }
                     }
-                }
-                //WEBHOOK HANDLING
-                //Check if the webhook's already there
-                const channel = client.channels.cache.get(message.channel.id);
-                try {
-                    const webhooks = await channel.fetchWebhooks();
-                    let webhook = webhooks.find(wh => wh.name === `${client.user.username}`); // For the sake of making sure that the dev-bot can use his own webhooks.
-                    if (!webhook) { // If Stilte is there.
-                        message.channel.createWebhook(`${client.user.username}`).then(message.delete()).then(webhook => {
+                    //WEBHOOK HANDLING
+                    //Check if the webhook's already there
+                    const channel = client.channels.cache.get(message.channel.id);
+                    try {
+                        const webhooks = await channel.fetchWebhooks();
+                        let webhook = webhooks.find(wh => wh.name === `${client.user.username}`); // For the sake of making sure that the dev-bot can use his own webhooks.
+                        if (!webhook) { // If Stilte is there.
+                            message.channel.createWebhook(`${client.user.username}`).then(message.delete()).then(webhook => {
+                                webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL() })
+                                //INCASE I WANT TO RESTORE EMBEDS, UNCOMMENT.
+                                //if (message.attachments.size > 0) webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL(), files: [message.attachments.first()] })
+                                //else webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL() })
+
+                            })
+                        }
+                        else { // we found stilte pog
+                            message.delete()
                             webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL() })
                             //INCASE I WANT TO RESTORE EMBEDS, UNCOMMENT.
-                            //if (message.attachments.size > 0) webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL(), files: [message.attachments.first()] })
+                            //if (message.attachments.size > 0) webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL(), files: [message.attachments.first(), message.attachments.second(), message.attachments.third()] })
                             //else webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL() })
-
-                        })
-                    }
-                    else { // we found stilte pog
-                        message.delete()
-                        webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL() })
-                        //INCASE I WANT TO RESTORE EMBEDS, UNCOMMENT.
-                        //if (message.attachments.size > 0) webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL(), files: [message.attachments.first(), message.attachments.second(), message.attachments.third()] })
-                        //else webhook.send({ content: gagSpeech, username: `${message.member.displayName}`, avatarURL: message.member.displayAvatarURL() })
+                        }
+                    } catch (error) {
+                        console.error(`Error trying to send a message in ${message.guild.name} - ${message.guild.id}`, error);
                     }
                 } catch (error) {
                     console.error(`Error trying to send a message in ${message.guild.name} - ${message.guild.id}`, error);
                 }
-            } catch (error) {
-                console.error(`Error trying to send a message in ${message.guild.name} - ${message.guild.id}`, error);
             }
         }
     }
-}
 })
 

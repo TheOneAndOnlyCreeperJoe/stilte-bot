@@ -51,7 +51,7 @@ const run = async (client, interaction) => {
     const member = interaction.options.getMember("user")
     const duration = interaction.options.getNumber("duration")
     let gagType = interaction.options.getNumber("type") //gagspeak by default
-    const key = `${interaction.guild.id}-${member.id}`
+    let key = `${interaction.guild.id}-${member.id}`
     // Joe's piss poor data management below.
     const d = new Date()
     const date = d.toLocaleString()
@@ -72,6 +72,23 @@ const run = async (client, interaction) => {
     //console.log('gagType: ' + gagType)
     try {
         if (interaction.guild) {
+            if(member.id === client.user.id) // Fun easter egg if you try to gag the bot.
+            {
+                // So here we pull out the uno reverse card.
+                key = `${interaction.guild.id}-${interaction.member.id}`
+                gaglist.set(key, interaction.member.id, "name");
+                gaglist.set(key, interaction.guild.id, "guild");
+                gaglist.set(key, expiresOn, "expirationdate");
+                gaglist.set(key, date, "applicationdate");
+                gaglist.set(key, gagType, "gagtype");
+                gaglist.set(key, -1, "applierRolePower");
+
+                const embed = new MessageEmbed()
+                .setColor(0xe60069)
+                .addField('Uno Reverse Card' + '!', `${interaction.member.user} succesfully gagged <t:${tdate}> (expires <t:${tdate}:R>) with a ${types[gagType].name.toLowerCase()}, because they gagging the bot.`, true);
+                return interaction.reply({embeds: [embed]})
+            }
+            else{
             // Set all the info for the gag DB.
             gaglist.set(key, member.id, "name");
             gaglist.set(key, interaction.guild.id, "guild");
@@ -87,6 +104,7 @@ const run = async (client, interaction) => {
             .setColor(0xfc8803)
             .addField(types[gagType].name + types[gagType].plural + '!', `${member.user} succesfully gagged until <t:${tdate}> (expires <t:${tdate}:R>) with a ${types[gagType].name.toLowerCase()}`, true);
             return interaction.reply({embeds: [embed]})
+            }
         }
     } catch (error) {
         console.error('Error trying to send a message: ', error);
