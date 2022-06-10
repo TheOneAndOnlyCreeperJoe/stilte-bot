@@ -33,6 +33,9 @@ const durations = [
 ]
 
 const run = async (client, interaction) => {
+    //member = the target
+    //interaction.member = the user
+
     // We get these two enmaps within the async because we need to keep them up to date.
     const optoutList = new Enmap({
         name: "optoutList",
@@ -66,10 +69,6 @@ const run = async (client, interaction) => {
     if (optoutList.has(key) && settings.get(interaction.guild.id, "toggleSafeword") !== 0) return interaction.reply({content: "They are opted out of gagging!", ephemeral: true})
     if (!interaction.guild) return interaction.reply({ content: "This command can only be used in a server!", ephemeral: true })
 
-    //console.log('Member: ' + member.id)
-    //console.log('expirationDate: ' + expiresOn)
-    //console.log('applicationDate: ' + date)
-    //console.log('gagType: ' + gagType)
     try {
         if (interaction.guild) {
             if(member.id === client.user.id) // Fun easter egg if you try to gag the bot.

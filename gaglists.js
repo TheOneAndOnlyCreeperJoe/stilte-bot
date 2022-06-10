@@ -205,7 +205,7 @@ const cockGagTable = {
 const bitGagTable = {
     a: { standard: "a", closer: "w" },
     b: { standard: "u", closer: "fh" },
-    c: { opener: "u", standard: "rh" },
+    c: { opener: "h", standard: "f" },
     d: {standard: "a", closer: "ul"},
     e: {standard: "u", closer: "h"},
     f: {standard: "f", closer: "pu" }, 
