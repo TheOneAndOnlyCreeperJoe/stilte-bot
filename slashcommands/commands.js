@@ -41,6 +41,9 @@ module.exports = {
             {name: '**Settings** *(/settings)*', 
             value: 'Lists the server\'s configured settings, such as enabling roleplay mode. \n*Requires \'manage\' permissions.*'},
 
+            {name: '**Translate** *(/translate)*', 
+            value: 'Send a string of text and specify a gag, and the bot will output a reply as if you said that while gagged with that specific gag.'},
+
             {name: '**Ungag** *(/ungag)*', 
             value: 'Removes a gag from an user prematurely. \n*Requires \'use\' permissions.*.'},
         )

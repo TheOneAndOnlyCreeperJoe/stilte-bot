@@ -122,6 +122,8 @@ client.login(process.env.TOKEN)
 // Whenever a server is joined, create auto-ensured settings. 
 client.on("guildCreate", guild => {
     console.log(`Guild joined: ${guild.name} - ${guild.id}`)
+    const channel = guild.channels.cache.find(channel => channel.type === 'GUILD_TEXT' && channel.permissionsFor(guild.me).has("SEND_MESSAGES"))
+    channel.send("Thank you for inviting Stilte bot! If you are the one that added this bot, please make sure to run through /settings to make sure everything is to your liking. /commands will list all useable commands, and /help will answer commonly asked questions!")
     settings.ensure(`${guild.id}`, {
         blacklistedChannels: [],	//channels in which the bot will not replace messages.
         permsUse: "MODERATE_MEMBERS",	//the default permission to use existing gag commands, but not create or alter them.
