@@ -1,6 +1,7 @@
 // Sequestered here because they're bulky. Exports at bottom of the file.
 
-// Yes, we define the alphabet, because values have to be numbers.
+
+// Holy shit I hate the english language. 
 
 const ballGagTable = {
     a: {standard: "n" },
@@ -203,32 +204,32 @@ const cockGagTable = {
 }
 
 const bitGagTable = {
-    a: { standard: "a", closer: "w" },
+    a: { standard: "a"},
     b: { standard: "u", closer: "fh" },
-    c: { opener: "h", standard: "f" },
-    d: {standard: "a", closer: "ul"},
-    e: {standard: "u", closer: "h"},
-    f: {standard: "f", closer: "pu" }, 
+    c: {standard: "s" },
+    d: {standard: "d"},
+    e: {standard: "e"},
+    f: {standard: "f"}, 
     g: {standard: "g"},
-    h: {opener: "u", standard: "h"},
-    i: {standard: "i", closer: "h"},
-    j: {standard: "e", closer: "h" },
-    k: {opener: "h", standard: "u"},
-    l: {opener: "u", standard: "e"},
-    m: {opener: "v", standard: "h"},
-    n: {opener: "v", standard: "u"},
-    o: {standard: "o", closer: "h" },
-    p: {opener: "v", standard: "f"},
-    q: {opener: "h", standard: "u", closer: "e" },
-    r: {standard: "u", closer: "r"},
-    s: {standard: "f", closer: "u" }, 
-    t: {opener: "p", standard: "f"},
-    u: {standard: "u", closer: "h"},
-    v: {opener: "v", standard: "z"},
-    w: {opener: "v", standard: "z"},
-    x: {standard: "f", closer: "u" }, 
-    y: {opener: "i", standard: "h"},
-    z: {opener: "z", standard: "u"},
+    h: {standard: "h"},
+    i: {standard: "i"},
+    j: {standard: "g"},
+    k: {standard: "k"},
+    l: {opener: "u", standard: "l"},
+    m: {standard: "m"},
+    n: {standard: "n"},
+    o: {standard: "o"},
+    p: {standard: "f"},
+    q: {standard: "k"},
+    r: {standard: "v", closer: "h"},
+    s: {standard: "s", }, 
+    t: {standard: "t"},
+    u: {standard: "u"},
+    v: {standard: "v"},
+    w: {standard: "u"},
+    x: {standard: "k", closer: "h" }, 
+    y: {standard: "y"},
+    z: {standard: "s"},
     // NUMBERS
     0: {standard: "zuuhuroh"},
     1: {standard: "ohvuuh"},

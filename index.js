@@ -181,6 +181,7 @@ client.on("messageCreate", async (message) => {
                     // So at this point we send back the webhook message, that mimmicks the username and avatar of the person, with funny gagged noises.
                     // Gagspeak gag-type; replace letters and numbers with characters from the ballGagTable
                     if (gagType <= 4) {
+                        
                         var noiseTable = []; // The table containing the gag, see gaglists.js
                         switch (gagType) {
                             case 0: noiseTable = gagLists.ballGagTable; break;
