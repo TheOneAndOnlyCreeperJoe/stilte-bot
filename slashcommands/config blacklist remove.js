@@ -10,6 +10,12 @@ const settings = new Enmap({
 const run = async (client, interaction) => {
     // get the channel to be unblacklisted and server key
     let channelToBlacklist = interaction.options.getString("channel")
+    if (channelToBlacklist.slice(0, 2) == '<#') {
+        channelToBlacklist = channelToBlacklist.substring(2)
+        channelToBlacklist = channelToBlacklist.substring(0, channelToBlacklist.length - 1)
+        let storedChannel = interaction.guild.channels.cache.get(channelToBlacklist)
+        channelToBlacklist = storedChannel.name
+    }
     let key = `${interaction.guild.id}`;
     try {
         // Channel can't be found.

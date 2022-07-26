@@ -10,6 +10,14 @@ const settings = new Enmap({
 const run = async (client, interaction) => {
     // get the channel to be blacklisted and server key
     let channelToBlacklist = interaction.options.getString("channel")
+    //console.log(interaction.guild.channels.cache)
+    console.log(channelToBlacklist)
+    if (channelToBlacklist.slice(0, 2) == '<#') {
+        channelToBlacklist = channelToBlacklist.substring(2)
+        channelToBlacklist = channelToBlacklist.substring(0, channelToBlacklist.length - 1)
+        let storedChannel = interaction.guild.channels.cache.get(channelToBlacklist)
+        channelToBlacklist = storedChannel.name
+    }
     let key = `${interaction.guild.id}`;
     try {
         // Channel's already blacklisted.
@@ -17,14 +25,14 @@ const run = async (client, interaction) => {
             return interaction.reply(`That channel is already blacklisted!`)
         }
         // Channel found and is not already blacklisted.
-        else if(interaction.guild.channels.cache.find(channel => channel.name === channelToBlacklist)) {
+        else if (interaction.guild.channels.cache.find(channel => channel.name === channelToBlacklist)) {
             settings.push(key, channelToBlacklist, "blacklistedChannels");
         }
         // Channel can't be found.
-        else{
+        else {
             return interaction.reply(`The channel couldn't be found! Perhaps you made a typo?`)
         }
-        
+
     } catch (error) {
         console.error('Error trying to edit blacklist: ', error);
         return interaction.reply('Failed to edit blacklist: ' + error + ', please yell at the developer because this is a serious issue.')
